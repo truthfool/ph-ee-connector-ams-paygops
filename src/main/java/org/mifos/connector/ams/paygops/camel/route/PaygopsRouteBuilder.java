@@ -243,7 +243,7 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                 .marshal().json(JsonLibrary.Jackson)
                 .toD(getConfirmationEndpoint() + "?bridgeEndpoint=true&throwExceptionOnFailure=false&" +
                         ConnectionUtils.getConnectionTimeoutDsl(amsTimeout))
-                .log(LoggingLevel.INFO, "Paygops verification api response: \n ${body}");
+                .log(LoggingLevel.TRACE, "Paygops verification api response: \n ${body}");
 
     }
 
