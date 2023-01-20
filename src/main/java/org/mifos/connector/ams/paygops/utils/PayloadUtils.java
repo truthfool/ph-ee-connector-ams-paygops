@@ -23,9 +23,7 @@ public class PayloadUtils {
         return null;
     }
     public static String getPayerPayeeInfo(List<PayerPayee> jsonArray, String key){
-        System.out.println("Json Array: "+jsonArray);
         for(PayerPayee obj:jsonArray){
-            System.out.println(obj);
             String keyVal= obj.getPartyIdType();
             if(keyVal!=null && keyVal.equalsIgnoreCase(key)){
                 return obj.getPartyIdIdentifier();
@@ -34,7 +32,6 @@ public class PayloadUtils {
         return null;
     }
     public static JSONObject convertChannelToPaygopsPayload(GsmaTransferDTO gsmaTransferDTO) {
-        System.out.println("Json Custom Data"+gsmaTransferDTO);
         String amount=gsmaTransferDTO.getAmount();
         String currency=convertCustomData(gsmaTransferDTO.getCustomData(),"currency");
         String msisdn=getPayerPayeeInfo(gsmaTransferDTO.getPayer(),"MSISDN");

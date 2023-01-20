@@ -192,6 +192,8 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     return gsmaTransferDTO;
                 })
                 .to("direct:transfer-validation-base")
+                .choice()
+                .when(header("CamelHttpResponseCode").startsWith("2"))
                 .process(e->{
                     String transactionId= e.getProperty(TRANSACTION_ID).toString();
                     String type= e.getProperty(TYPE).toString();
@@ -210,7 +212,18 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     responseObject.put("accountHoldingInstitutionId ", accountHoldingInstitutionId);
                     logger.debug("response object :{}",responseObject);
                     e.getIn().setBody(responseObject.toString());
+                })
+                .otherwise()
+                .log(LoggingLevel.INFO,"Paygops Validation Failed")
+                .process(e->{
+                    String body = e.getIn().getBody(String.class);
+                    JSONObject jsonObject = new JSONObject(body);
+                    Integer errorCode = jsonObject.getInt("error");
+                    String errorDescription = jsonObject.getString("error_message");
+                    String errorInfo = jsonObject.toString(1);
+                    setErrorCamelInfo(e,errorDescription,errorCode,errorInfo);
                 });
+
 
         from("direct:transfer-settlement")
                 .id("transfer-settlement")
