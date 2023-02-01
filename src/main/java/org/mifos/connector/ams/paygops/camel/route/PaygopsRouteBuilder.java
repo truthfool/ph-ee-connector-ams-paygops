@@ -182,7 +182,7 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     logger.info("Body : {}",e.getIn().getBody(GsmaTransferDTO.class).toString());
                     e.setProperty(TYPE,gsmaTransferDTO.getType());
                     e.setProperty(SUBTYPE,gsmaTransferDTO.getSubType());
-                    e.setProperty(ACCOUNT_HOLDING_INDTITUTION_ID,e.getIn()  .getHeader("accountHoldingInstitutionId"));
+                    e.setProperty(ACCOUNT_HOLDING_INSTITUTION_ID,e.getIn().getHeader("accountHoldingInstitutionId").toString());
 
                     String transactionId = gsmaTransferDTO.getRequestingOrganisationTransactionReference();
                     JSONObject channelRequest=PayloadUtils.convertChannelToPaygopsPayload(gsmaTransferDTO);
@@ -198,7 +198,7 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     String transactionId= e.getProperty(TRANSACTION_ID).toString();
                     String type= e.getProperty(TYPE).toString();
                     String subtype= e.getProperty(SUBTYPE).toString();
-                    String accountHoldingInstitutionId= e.getProperty(ACCOUNT_HOLDING_INDTITUTION_ID).toString();
+                    String accountHoldingInstitutionId= e.getProperty(ACCOUNT_HOLDING_INSTITUTION_ID).toString();
 
                     logger.debug("Transaction Id : {}",transactionId);
                     logger.debug("Response received from validation base : {}",e.getIn().getBody());
