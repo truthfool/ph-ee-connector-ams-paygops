@@ -92,6 +92,10 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                             exchange.setProperty("accountStatus",accountStatus.ACTIVE.toString());
                             exchange.setProperty("subStatus", "");
                             exchange.setProperty("dfspId", exchange.getProperty("dfspId"));
+                            exchange.setProperty(TRANSACTION_ID, exchange.getProperty(TRANSACTION_ID));
+                            exchange.setProperty("amount", result.getAmount());
+                            exchange.setProperty("currency", result.getCurrency());
+                            exchange.setProperty("msisdn", result.getWallet_msisdn().substring(1));
                         } else {
                             setErrorCamelInfo(exchange,"Validation Unsuccessful: Reconciled field returned false",
                                     ErrorCodeEnum.RECONCILIATION.getCode(), result.toString());
@@ -144,12 +148,9 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     else {
                         JSONObject paybillRequest = new JSONObject(exchange.getIn().getBody(String.class));
                         PaygopsRequestDTO paygopsRequestDTO = PayloadUtils.convertPaybillPayloadToAmsPaygopsPayload(paybillRequest);
-
-                        String transactionId = paygopsRequestDTO.getTransactionId();
                         log.info(paygopsRequestDTO.toString());
-                        exchange.setProperty(TRANSACTION_ID, transactionId);
+                        exchange.setProperty(TRANSACTION_ID, paygopsRequestDTO.getTransactionId());
                         exchange.setProperty("dfspId", exchange.getProperty("dfspId"));
-                        logger.info("DFSP Id:{}",exchange.getProperty("dfspId"));
                         logger.info("Validation request DTO: \n\n\n" + paygopsRequestDTO);
                         return paygopsRequestDTO;
                     }
@@ -210,22 +211,22 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                 .log(LoggingLevel.INFO, "## Paygops user validation")
                 .setBody(e -> {
                     String body=e.getIn().getBody(String.class);
-                    logger.debug("Dfsp Id : {}",e.getProperty("dfspId"));
                     e.setProperty("dfspId",e.getProperty("dfspId"));
-                    logger.debug("Body : {}",body);
+                    logger.info("Body : {}",body);
                     return body;
                 })
                 .to("direct:transfer-validation-base")
                 .process(e->{
-                    String transactionId= e.getProperty(TRANSACTION_ID).toString();
-                    logger.debug("Transaction Id : {}",transactionId);
                     logger.debug("Response received from validation base : {}",e.getIn().getBody());
                     // Building the response
                     JSONObject responseObject=new JSONObject();
                     responseObject.put("reconciled", e.getProperty(PARTY_LOOKUP_FAILED).equals(false));
-                    responseObject.put("AMS", "paygops");
-                    responseObject.put("transaction_id", transactionId);
+                    responseObject.put("amsName", "paygops");
                     responseObject.put("dfspId", e.getProperty("dfspId"));
+                    responseObject.put(TRANSACTION_ID, e.getProperty(TRANSACTION_ID));
+                    responseObject.put("amount", e.getProperty("amount"));
+                    responseObject.put("currency", e.getProperty("currency"));
+                    responseObject.put("msisdn", e.getProperty("msisdn"));
                     logger.debug("response object :{}",responseObject);
                     e.getIn().setBody(responseObject.toString());
                 });
