@@ -147,10 +147,10 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     else {
                         JSONObject paybillRequest = new JSONObject(exchange.getIn().getBody(String.class));
                         PaygopsRequestDTO paygopsRequestDTO = PayloadUtils.convertPaybillPayloadToAmsPaygopsPayload(paybillRequest);
-                        log.info(paygopsRequestDTO.toString());
+                        log.debug(paygopsRequestDTO.toString());
                         exchange.setProperty(TRANSACTION_ID, paygopsRequestDTO.getTransactionId());
                         exchange.setProperty("accountHoldingInstitutionId", exchange.getProperty("accountHoldingInstitutionId"));
-                        logger.info("Validation request DTO: \n\n\n" + paygopsRequestDTO);
+                        logger.debug("Validation request DTO: \n\n\n" + paygopsRequestDTO);
                         return paygopsRequestDTO;
                     }
                 })
