@@ -5,7 +5,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.apache.camel.util.json.JsonObject;
 import org.json.JSONObject;
 import org.mifos.connector.ams.paygops.paygopsDTO.PaygopsRequestDTO;
 import org.mifos.connector.ams.paygops.paygopsDTO.PaygopsResponseDto;
@@ -91,11 +90,11 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                             exchange.setProperty(PARTY_LOOKUP_FAILED, false);
                             exchange.setProperty("accountStatus",accountStatus.ACTIVE.toString());
                             exchange.setProperty("subStatus", "");
-                            exchange.setProperty("dfspId", exchange.getProperty("dfspId"));
+                            exchange.setProperty("accountHoldingInstitutionId", exchange.getProperty("accountHoldingInstitutionId"));
                             exchange.setProperty(TRANSACTION_ID, exchange.getProperty(TRANSACTION_ID));
                             exchange.setProperty("amount", result.getAmount());
                             exchange.setProperty("currency", result.getCurrency());
-                            exchange.setProperty("msisdn", result.getWallet_msisdn().substring(1));
+                            exchange.setProperty("msisdn", result.getSender_phone_number().substring(1));
                         } else {
                             setErrorCamelInfo(exchange,"Validation Unsuccessful: Reconciled field returned false",
                                     ErrorCodeEnum.RECONCILIATION.getCode(), result.toString());
@@ -150,7 +149,7 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                         PaygopsRequestDTO paygopsRequestDTO = PayloadUtils.convertPaybillPayloadToAmsPaygopsPayload(paybillRequest);
                         log.info(paygopsRequestDTO.toString());
                         exchange.setProperty(TRANSACTION_ID, paygopsRequestDTO.getTransactionId());
-                        exchange.setProperty("dfspId", exchange.getProperty("dfspId"));
+                        exchange.setProperty("accountHoldingInstitutionId", exchange.getProperty("accountHoldingInstitutionId"));
                         logger.info("Validation request DTO: \n\n\n" + paygopsRequestDTO);
                         return paygopsRequestDTO;
                     }
@@ -211,8 +210,10 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                 .log(LoggingLevel.INFO, "## Paygops user validation")
                 .setBody(e -> {
                     String body=e.getIn().getBody(String.class);
-                    e.setProperty("dfspId",e.getProperty("dfspId"));
-                    logger.info("Body : {}",body);
+                    String accountHoldingInstitutionId= String.valueOf(e.getIn().getHeader("accountHoldingInstitutionId"));
+                    e.setProperty("accountHoldingInstitutionId",accountHoldingInstitutionId);
+                    logger.debug("Body : {}",body);
+                    logger.debug("accountHoldingInstitutionId : {}",accountHoldingInstitutionId);
                     return body;
                 })
                 .to("direct:transfer-validation-base")
@@ -222,7 +223,7 @@ public class PaygopsRouteBuilder extends RouteBuilder {
                     JSONObject responseObject=new JSONObject();
                     responseObject.put("reconciled", e.getProperty(PARTY_LOOKUP_FAILED).equals(false));
                     responseObject.put("amsName", "paygops");
-                    responseObject.put("dfspId", e.getProperty("dfspId"));
+                    responseObject.put("accountHoldingInstitutionId", e.getProperty("accountHoldingInstitutionId"));
                     responseObject.put(TRANSACTION_ID, e.getProperty(TRANSACTION_ID));
                     responseObject.put("amount", e.getProperty("amount"));
                     responseObject.put("currency", e.getProperty("currency"));
